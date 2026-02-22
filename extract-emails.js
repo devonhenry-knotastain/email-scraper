@@ -58,13 +58,13 @@ const results = [];
   fs.writeFileSync('emails.json', JSON.stringify(results, null, 2));
   console.log('Scraping complete. Results saved in emails.json');
   // --- SEND TO N8N WEBHOOK ---
-try {
-  const response = await fetch(webhookUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ emails: results })
-  });
+const webhookUrl = payload.client_payload.callback_url;
 
+await fetch(webhookUrl, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ emails: results })
+});
   if (response.ok) {
     console.log('Results successfully sent to n8n webhook.');
   } else {
