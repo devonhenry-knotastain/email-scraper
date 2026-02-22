@@ -6,7 +6,7 @@ import puppeteer from 'puppeteer';
 // Path to JSON file created by GitHub workflow
 const linksFile = 'links.json';
 // Webhook URL for n8n to receive results
-const webhookUrl = 'https://n8n.knotastain.com/webhook-test/bd3e27d0-fb3a-465f-819d-6f748fa85eb7';
+const webhookUrl = 'https://n8n.knotastain.com/webhook/bd3e27d0-fb3a-465f-819d-6f748fa85eb7';
 // Email regex
 const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-z]{2,}/g;
 
