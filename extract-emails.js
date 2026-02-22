@@ -1,7 +1,6 @@
 // extract-emails.js
 import fs from 'fs';
 import puppeteer from 'puppeteer';
-import fetch from 'node-fetch'; // for Node 18+ you can use global fetch
 
 // --- CONFIG ---
 // Path to JSON file created by GitHub workflow
