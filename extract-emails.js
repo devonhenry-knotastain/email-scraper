@@ -1,40 +1,78 @@
+// extract-emails.js
 import fs from 'fs';
 import puppeteer from 'puppeteer';
+import fetch from 'node-fetch'; // for Node 18+ you can use global fetch
 
-const links = JSON.parse(fs.readFileSync('links.json', 'utf-8'));
+// --- CONFIG ---
+// Path to JSON file created by GitHub workflow
+const linksFile = 'links.json';
+// Webhook URL for n8n to receive results
+const webhookUrl = 'https://your-n8n-instance/webhook/email-results';
+// Email regex
 const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-z]{2,}/g;
+
+// --- READ LINKS ---
+const links = JSON.parse(fs.readFileSync(linksFile, 'utf-8'));
+console.log('Links to scrape:', links);
 
 const results = [];
 
-const browser = await puppeteer.launch({ headless: true });
-const page = await browser.newPage();
+(async () => {
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox'],
+  });
+  const page = await browser.newPage();
 
-for (const url of links) {
-  try {
-    console.log(`Checking: ${url}`);
-    await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
-
-    // Optional: close popups if they exist
+  for (const url of links) {
     try {
-      const closeButton = await page.$('div[aria-label="Close"], div[aria-label="close"], [aria-label="Dismiss"]');
-      if (closeButton) {
-        await closeButton.click();
-        await page.waitForTimeout(2000);
-      }
-    } catch {}
+      console.log(`Checking: ${url}`);
+      await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
 
-    const content = await page.content();
-    const emails = content.match(emailRegex) || [];
-    results.push({ url, emails });
+      // --- CLOSE POPUPS IF ANY ---
+      try {
+        const closeButton = await page.$(
+          'div[aria-label="Close"], div[aria-label="close"], [aria-label="Dismiss"]'
+        );
+        if (closeButton) {
+          await closeButton.click();
+          await page.waitForTimeout(2000);
+        }
+      } catch {}
 
-  } catch (err) {
-    console.log(`Error on: ${url}`, err);
-    results.push({ url, emails: [] });
+      // --- EXTRACT EMAILS ---
+      const content = await page.content();
+      const emails = content.match(emailRegex) || [];
+      results.push({ url, emails });
+
+      console.log(`Found ${emails.length} emails at ${url}`);
+
+    } catch (err) {
+      console.log(`Error on: ${url}`, err.message);
+      results.push({ url, emails: [] });
+    }
   }
-}
 
-await browser.close();
+  await browser.close();
 
-// Save results locally
-fs.writeFileSync('emails.json', JSON.stringify(results, null, 2));
-console.log('Finished scraping:', results);
+  // --- SAVE LOCALLY ---
+  fs.writeFileSync('emails.json', JSON.stringify(results, null, 2));
+  console.log('Scraping complete. Results saved in emails.json');
+
+  // --- SEND TO N8N WEBHOOK ---
+  try {
+    const response = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ emails: results }),
+    });
+
+    if (response.ok) {
+      console.log('Results successfully sent to n8n webhook.');
+    } else {
+      console.log('Failed to send results to n8n webhook. Status:', response.status);
+    }
+  } catch (err) {
+    console.log('Error sending results to n8n webhook:', err.message);
+  }
+})();
