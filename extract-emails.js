@@ -25,8 +25,8 @@ for (const url of links) {
       timeout: 30000
     });
 
-    // Wait a moment for overlays
-    await page.waitForTimeout(3000);
+    // Wait 3 seconds
+    await new Promise(resolve => setTimeout(resolve, 3000));
 
     // Try closing popup/modal
     try {
@@ -37,16 +37,12 @@ for (const url of links) {
       if (closeButton) {
         console.log("Closing popup...");
         await closeButton.click();
-        await page.waitForTimeout(2000);
+        await new Promise(resolve => setTimeout(resolve, 2000));
       }
     } catch (err) {
       console.log("No popup detected");
     }
 
-    // Optional debug screenshot (helps a LOT)
-    await page.screenshot({ path: 'debug.png' });
-
-    // Extract HTML content
     const content = await page.content();
     const match = content.match(emailRegex);
 
