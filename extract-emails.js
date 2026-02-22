@@ -7,7 +7,7 @@ import fetch from 'node-fetch'; // for Node 18+ you can use global fetch
 // Path to JSON file created by GitHub workflow
 const linksFile = 'links.json';
 // Webhook URL for n8n to receive results
-const webhookUrl = 'https://n8n.knotastain.com/webhook/bd3e27d0-fb3a-465f-819d-6f748fa85eb7';
+const webhookUrl = 'https://n8n.knotastain.com/webhook-test/bd3e27d0-fb3a-465f-819d-6f748fa85eb7';
 // Email regex
 const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-z]{2,}/g;
 
@@ -58,21 +58,20 @@ const results = [];
   // --- SAVE LOCALLY ---
   fs.writeFileSync('emails.json', JSON.stringify(results, null, 2));
   console.log('Scraping complete. Results saved in emails.json');
-
   // --- SEND TO N8N WEBHOOK ---
-  try {
-    const response = await fetch(webhookUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ emails: results }),
-    });
+try {
+  const response = await fetch(webhookUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ emails: results })
+  });
 
-    if (response.ok) {
-      console.log('Results successfully sent to n8n webhook.');
-    } else {
-      console.log('Failed to send results to n8n webhook. Status:', response.status);
-    }
-  } catch (err) {
-    console.log('Error sending results to n8n webhook:', err.message);
+  if (response.ok) {
+    console.log('Results successfully sent to n8n webhook.');
+  } else {
+    console.log('Failed to send results to n8n webhook. Status:', response.status);
   }
+} catch (err) {
+  console.log('Error sending results to n8n webhook:', err.message);
+}
 })();
