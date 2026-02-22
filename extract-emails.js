@@ -1,7 +1,6 @@
 // extract-emails.js
 import fs from 'fs';
 import puppeteer from 'puppeteer';
-import fetch from 'node-fetch';
 
 // -------- CONFIG --------
 const linksFile = 'links.json';
