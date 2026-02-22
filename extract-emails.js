@@ -13,6 +13,7 @@ const browser = await puppeteer.launch({
     "--disable-setuid-sandbox"
   ]
 });
+
 const page = await browser.newPage();
 
 for (const url of links) {
@@ -20,10 +21,32 @@ for (const url of links) {
     console.log("Checking:", url);
 
     await page.goto(url, {
-      waitUntil: 'domcontentloaded',
+      waitUntil: 'networkidle2',
       timeout: 30000
     });
 
+    // Wait a moment for overlays
+    await page.waitForTimeout(3000);
+
+    // Try closing popup/modal
+    try {
+      const closeButton = await page.$(
+        'div[aria-label="Close"], div[aria-label="close"], [aria-label="Dismiss"]'
+      );
+
+      if (closeButton) {
+        console.log("Closing popup...");
+        await closeButton.click();
+        await page.waitForTimeout(2000);
+      }
+    } catch (err) {
+      console.log("No popup detected");
+    }
+
+    // Optional debug screenshot (helps a LOT)
+    await page.screenshot({ path: 'debug.png' });
+
+    // Extract HTML content
     const content = await page.content();
     const match = content.match(emailRegex);
 
@@ -32,14 +55,18 @@ for (const url of links) {
         url,
         email: match[0].toLowerCase()
       });
+      console.log("Email found:", match[0]);
+    } else {
+      console.log("No email found on:", url);
     }
 
   } catch (error) {
-    console.log("Error on:", url);
+    console.log("Error on:", url, error.message);
   }
 }
 
 await browser.close();
 
 fs.writeFileSync('emails.json', JSON.stringify(results, null, 2));
-console.log("Done.");
+
+console.log("Finished scraping.");
