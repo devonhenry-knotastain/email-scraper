@@ -20,11 +20,13 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      # ← Step 3A: Create links.json from payload
       - name: Create links.json from n8n payload
         run: |
           echo '${{ toJson(github.event.client_payload.links) }}' > links.json
           echo "Generated links.json:"
           cat links.json
 
+      # ← Step 3B: Run your scraper
       - name: Run scraper
         run: node extract-emails.js
