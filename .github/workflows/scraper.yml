@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v4
 
       - name: Setup Node
@@ -20,13 +20,12 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      # ← Step 3A: Create links.json from payload
-      - name: Create links.json from n8n payload
-        run: |
-          echo '${{ toJson(github.event.client_payload.links) }}' > links.json
-          echo "Generated links.json:"
-          cat links.json
+      # 🔥 THIS IS WHAT YOU ARE MISSING
+      - name: Save GitHub payload
+        run: echo '${{ toJson(github.event) }}' > payload.json
 
-      # ← Step 3B: Run your scraper
+      - name: Create links.json
+        run: echo '${{ toJson(github.event.client_payload.links) }}' > links.json
+
       - name: Run scraper
         run: node extract-emails.js
