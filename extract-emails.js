@@ -6,7 +6,13 @@ const results = [];
 
 const emailRegex = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i;
 
-const browser = await puppeteer.launch({ headless: "new" });
+const browser = await puppeteer.launch({
+  headless: "new",
+  args: [
+    "--no-sandbox",
+    "--disable-setuid-sandbox"
+  ]
+});
 const page = await browser.newPage();
 
 for (const url of links) {
